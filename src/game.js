@@ -1,32 +1,42 @@
 import React from 'react';
 import { Board } from './board';
+import { constants } from './constants';
 
 export class Game extends React.Component {
   constructor(props) {
     super(props);
+
+    const squares = [];
+    for (let i = 0; i < constants.BOARD_LENGTH; i++) {
+      squares.push(Array(constants.BOARD_LENGTH).fill(null));
+    }
+
     this.state = {
       history: [{
-        squares: Array(9).fill(null),
-        desc: `Go to game start`
+        squares: squares,
+        desc: `Game Start`
       }],
       xIsNext: true,
       stepNumber: 0,
     }
   }
 
-  handleClick(i) {
+  handleClick(row, col) {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
-    const squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
+    const squares = [];
+    current.squares.forEach(square => {
+      squares.push(square.slice());
+    });
+    if (calculateWinner(squares) || squares[row][col]) {
       return;
     }
 
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[row][col] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       history: history.concat([{
-        squares: squares,
-        desc: `Place ${squares[i]} at ${i}`
+        squares: squares.slice(),
+        desc: `Place ${squares[row][col]} at (${row + 1}, ${col + 1})`
       }]),
       xIsNext: !this.state.xIsNext,
       stepNumber: history.length,
@@ -65,7 +75,7 @@ export class Game extends React.Component {
           <div className="game-board">
             <Board
                 squares={current.squares}
-                onClick={(i) => this.handleClick(i)}
+                onClick={(row, col) => this.handleClick(row, col)}
             />
           </div>
           <div className="game-info">
@@ -78,22 +88,20 @@ export class Game extends React.Component {
 }
 
 function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
 
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[b] === squares[c]) {
-      return squares[a];
+  for (let i = 0; i < squares.length; i++) {
+    if (squares[0][i] === squares[1][i] && squares[1][i] === squares[2][i]) {
+      return squares[0][i];
+    }
+
+    if (squares[i][0] === squares[i][1] && squares[i][1] === squares[i][2]) {
+      return squares[i][0];
     }
   }
-  return null;
+
+  if (squares[0][0] === squares[1][1] && squares[1][1] === squares[2][2]) {
+    return squares[0][0];
+  } else {
+    return null;
+  }
 }
